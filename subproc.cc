@@ -34,7 +34,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/resource.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -312,8 +314,9 @@ static void seccompViolation(nsjconf_t* nsjconf, siginfo_t* si) {
 
 static int reapProc(nsjconf_t* nsjconf, pid_t pid, bool should_wait = false) {
 	int status;
+    struct rusage usage;
 
-	if (wait4(pid, &status, should_wait ? 0 : WNOHANG, NULL) == pid) {
+	if (wait4(pid, &status, should_wait ? 0 : WNOHANG, &usage) == pid) {
 		if (nsjconf->use_cgroupv2) {
 			cgroup2::finishFromParent(nsjconf, pid);
 		} else {
@@ -329,6 +332,35 @@ static int reapProc(nsjconf_t* nsjconf, pid_t pid, bool should_wait = false) {
 		if (WIFEXITED(status)) {
 			LOG_I("pid=%d (%s) exited with status: %d, (PIDs left: %d)", pid,
 			    remote_txt.c_str(), WEXITSTATUS(status), countProc(nsjconf) - 1);
+
+			// TODO: MLE
+            LOG_I("usage.ru_maxrss = %ld\n", usage.ru_maxrss * 1024);  // TODO: change sentence, rlimit_as will div 2
+            LOG_I("nsjconf->rl_as = %lu\n", nsjconf->rl_as);
+            if ((uint64_t) usage.ru_maxrss * 1024 >= nsjconf->rl_as / 2) {
+                fprintf(stderr, "MLE\n");
+            }
+            // TODO: OLE
+            LOG_I("nsjconf->exec_file.c_str() = %s\n", nsjconf->exec_file.c_str());
+            
+            std::string result;
+            if (nsjconf->exec_file == "/bin/python3") {
+                result = nsjconf->argv[1].replace(nsjconf->argv[1].find_last_of('/') + 1, 7, "result");
+                LOG_I("nsjconf->argv[1].c_str() = %s\n", nsjconf->argv[1].c_str());
+            } else {
+                result = nsjconf->exec_file.replace(nsjconf->exec_file.find_last_of('/') + 1, 7, "result");
+            }
+            result = "." + result;
+            LOG_I("result.c_str() = %s\n", result.c_str());
+            int fd = open(result.c_str(), O_RDONLY);
+            struct stat st;
+            fstat(fd, &st);
+            off_t fsize = st.st_size;
+            LOG_I("file size of result = %ld\n", fsize);
+            LOG_I("nsjconf->rl_fsize = %lu\n", nsjconf->rl_fsize);
+            if ((uint64_t) fsize == nsjconf->rl_fsize) {
+                fprintf(stderr, "OLE\n");
+            }
+
 			removeProc(nsjconf, pid);
 			return WEXITSTATUS(status);
 		}
@@ -379,6 +411,7 @@ int reapProc(nsjconf_t* nsjconf) {
 			LOG_D("Sent SIGCONT to pid=%d", pid);
 			kill(pid, SIGKILL);
 			LOG_D("Sent SIGKILL to pid=%d", pid);
+			fprintf(stderr, "TLE\n");  // TODO: TLE
 		}
 	}
 	return rv;

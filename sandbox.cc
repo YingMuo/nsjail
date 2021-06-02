@@ -114,6 +114,13 @@ bool preparePolicy(nsjconf_t* nsjconf) {
 		kafel_set_input_file(ctxt, f);
 	}
 	if (!nsjconf->kafel_string.empty()) {
+
+		// TODO: fix the ninja code
+		// add seccomp for argv1 of execve is only allowed exec_file
+		std::string kafel_string_prefix = "ALLOW { execve { filename == " + std::to_string((unsigned long long)(nsjconf->exec_file.cbegin().base())) + " }, ";
+		std::string kafel_string_postfix = " } DEFAULT KILL";
+		nsjconf->kafel_string = kafel_string_prefix + nsjconf->kafel_string + kafel_string_postfix;
+		
 		LOG_D("Compiling seccomp policy from string: '%s'", nsjconf->kafel_string.c_str());
 		kafel_set_input_string(ctxt, nsjconf->kafel_string.c_str());
 	}
