@@ -7,8 +7,8 @@ PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
 export PATH
 
 # tips with this shell script
-if [ "$1" == "" ] || [ "$2" == "" ] || [ "$3" == "" ] || [ "$4" == "" ] || [ "$5" == "" ] || [ "$6" == "" ] || [ "$7" == "" ] || [ "$8" == "" ] || [ "$9" == "" ]; then
-    echo "./run.sh CONTAINER_PATH LANG_ID COMPILED INPUT OUTPUT ERROR TIME_LIMIT MEMORY_LIMIT FILE_LIMIT SECCOMP_STRING"
+if [ "$1" == "" ] || [ "$2" == "" ] || [ "$3" == "" ] || [ "$4" == "" ] || [ "$5" == "" ] || [ "$6" == "" ] || [ "$7" == "" ] || [ "$8" == "" ] || [ "$9" == "" ] || [ "${10}" == "" ]; then
+    echo "./run.sh CONTAINER_PATH LANG_ID COMPILED INPUT OUTPUT ERROR TIME_LIMIT MEMORY_LIMIT FILE_LIMIT SECCOMP_STRING NSJAIL_PATH"
     echo "CONTAINER_PATH - location of contain"
     echo "LANG_ID        - id of language, 0 for c, 1 for c++, 2 for python"
     echo "COMPILED       - is compiled, 0 for false, 1 for true"
@@ -19,8 +19,10 @@ if [ "$1" == "" ] || [ "$2" == "" ] || [ "$3" == "" ] || [ "$4" == "" ] || [ "$5
     echo "MEMORY_LIMIT   - memory limit (MB)"
     echo "FILE_LIMIT     - file size limit (MB)"
     echo "SECCOMP_STRING - syscall list for seccomp rules"
+    echo "NSJAIL_PATH    - location with nsjail executable file"
+
     echo
-    echo "e.g. ./run.sh $PWD/sandbox1 0 0 $PWD/testdata/01 $PWD/result/01 $PWD/log/01 10 512 512 \"read, newfstat, mmap, mprotect, munmap, newuname, arch_prctl, brk, access, exit_group, close, readlink, sysinfo, write, writev, lseek, clock_gettime, fcntl, pread64, openat, newstat\""
+    echo "e.g. ./run.sh $PWD/sandbox1 0 0 $PWD/testdata/01 $PWD/result/01 $PWD/log/01 10 512 512 \"read, newfstat, mmap, mprotect, munmap, newuname, arch_prctl, brk, access, exit_group, close, readlink, sysinfo, write, writev, lseek, clock_gettime, fcntl, pread64, openat, newstat\" $PWD"
     exit 0
 fi
 
@@ -84,9 +86,9 @@ fi
 container=$1
 container=${container#$PWD}
 if [ $2 == 0 ] || [ $2 == 1 ]; then
-    ./nsjail -Mo --user 99999 --group 99999 -v -R /bin/ -R /lib -R /lib64/ -R /usr/ -R /sbin/ -R $1/:$container/ --seccomp_string "${10}" -t $7 --rlimit_fsize $9 --rlimit_as $8 -x $container/main < $4 > $1/result 2>$6
+    ${10}/nsjail -Mo --user 99999 --group 99999 -v -R /bin/ -R /lib -R /lib64/ -R /usr/ -R /sbin/ -R $1/:$container/ --seccomp_string "${10}" -t $7 --rlimit_fsize $9 --rlimit_as $8 -x $container/main < $4 > $1/result 2>$6
 elif [ $2 == 2 ]; then
-    ./nsjail -Mo --user 99999 --group 99999 -v -R /bin/ -R /lib -R /lib64/ -R /usr/ -R /sbin/ -R $1/:$container/ --seccomp_string "${10}" -t $7 --rlimit_fsize $9 --rlimit_as $8 -x /bin/python3 python3 $container/main.py < $4 > $1/result 2>$6
+    ${10}/nsjail -Mo --user 99999 --group 99999 -v -R /bin/ -R /lib -R /lib64/ -R /usr/ -R /sbin/ -R $1/:$container/ --seccomp_string "${10}" -t $7 --rlimit_fsize $9 --rlimit_as $8 -x /bin/python3 python3 $container/main.py < $4 > $1/result 2>$6
 fi
 
 # SECCOMP ERROR
