@@ -334,13 +334,14 @@ static int reapProc(nsjconf_t* nsjconf, pid_t pid, bool should_wait = false) {
 			    remote_txt.c_str(), WEXITSTATUS(status), countProc(nsjconf) - 1);
 
 			// TODO: MLE
-            LOG_I("usage.ru_maxrss = %ld\n", usage.ru_maxrss * 1024);  // TODO: change sentence, rlimit_as will div 2
-            LOG_I("nsjconf->rl_as = %lu\n", nsjconf->rl_as);
+            // LOG_I("usage.ru_maxrss = %ld\n", usage.ru_maxrss * 1024);  // TODO: change sentence, rlimit_as will div 2
+            // LOG_I("nsjconf->rl_as = %lu\n", nsjconf->rl_as);
             if ((uint64_t) usage.ru_maxrss * 1024 >= nsjconf->rl_as / 2) {
-                fprintf(stderr, "MLE\n");
+                fprintf(stderr, "MLE");
             }
+
             // TODO: OLE
-            LOG_I("nsjconf->exec_file.c_str() = %s\n", nsjconf->exec_file.c_str());
+            // LOG_I("nsjconf->exec_file.c_str() = %s\n", nsjconf->exec_file.c_str());
             
             std::string result;
             if (nsjconf->exec_file == "/bin/python3") {
@@ -350,16 +351,20 @@ static int reapProc(nsjconf_t* nsjconf, pid_t pid, bool should_wait = false) {
                 result = nsjconf->exec_file.replace(nsjconf->exec_file.find_last_of('/') + 1, 7, "result");
             }
             result = "." + result;
-            LOG_I("result.c_str() = %s\n", result.c_str());
+            // LOG_I("result.c_str() = %s\n", result.c_str());
             int fd = open(result.c_str(), O_RDONLY);
             struct stat st;
             fstat(fd, &st);
             off_t fsize = st.st_size;
-            LOG_I("file size of result = %ld\n", fsize);
-            LOG_I("nsjconf->rl_fsize = %lu\n", nsjconf->rl_fsize);
+            // LOG_I("file size of result = %ld\n", fsize);
+            // LOG_I("nsjconf->rl_fsize = %lu\n", nsjconf->rl_fsize);
             if ((uint64_t) fsize == nsjconf->rl_fsize) {
-                fprintf(stderr, "OLE\n");
+                fprintf(stderr, "OLE");
             }
+
+			// output information
+			LOG_I("usage.ru_utime = %ld\n", (usage.ru_utime.tv_sec * 1000000 + usage.ru_utime.tv_usec) / 1000)
+			LOG_I("usage.ru_maxrss = %ld\n", usage.ru_maxrss);  // TODO: change sentence, rlimit_as will div 2
 
 			removeProc(nsjconf, pid);
 			return WEXITSTATUS(status);

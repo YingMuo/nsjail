@@ -91,6 +91,7 @@ elif [ $2 == 2 ]; then
     ${11}/nsjail -Mo --user 99999 --group 99999 -v -R /bin/ -R /lib -R /lib64/ -R /usr/ -R /sbin/ -R $1/:$container/ --seccomp_string "${10}" -t $7 --rlimit_fsize $9 --rlimit_as $8 -x /bin/python3 python3 $container/main.py < $4 > $1/result 2>$6
 fi
 
+# JUDGE OUTPUT
 # SECCOMP ERROR
 SEC=$(grep "Couldn't prepare sandboxing policy" $6)
 SEC=${SEC:+Y}
@@ -135,5 +136,15 @@ else
     touch $5
 fi
 
+# TIME OUTPUT
+# unit: ms
+TIME=$(grep "usage.ru_utime" $6)
+
+# MEMORY
+# unit: kb
+MEMORY=$(grep "usage.ru_maxrss" $6)
+
 # return
 echo $JUDGE
+echo ${TIME:46}
+echo ${MEMORY:47}
