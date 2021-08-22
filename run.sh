@@ -7,7 +7,7 @@ PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
 export PATH
 
 # tips with this shell script
-if [ "$1" == "" ] || [ "$2" == "" ] || [ "$3" == "" ] || [ "$4" == "" ] || [ "$5" == "" ] || [ "$6" == "" ] || [ "$7" == "" ] || [ "$8" == "" ] || [ "$9" == "" ] || [ "${10}" == "" ]; then
+if [ "$1" == "" ] || [ "$2" == "" ] || [ "$3" == "" ] || [ "$4" == "" ] || [ "$5" == "" ] || [ "$6" == "" ] || [ "$7" == "" ] || [ "$8" == "" ] || [ "$9" == "" ] || [ "${11}" == "" ]; then
     echo "./run.sh CONTAINER_PATH LANG_ID COMPILED INPUT OUTPUT ERROR TIME_LIMIT MEMORY_LIMIT FILE_LIMIT SECCOMP_STRING NSJAIL_PATH"
     echo "CONTAINER_PATH - location of contain"
     echo "LANG_ID        - id of language, 0 for c, 1 for c++, 2 for python"
@@ -86,9 +86,9 @@ fi
 container=$1
 container=${container#$PWD}
 if [ $2 == 0 ] || [ $2 == 1 ]; then
-    ${10}/nsjail -Mo --user 99999 --group 99999 -v -R /bin/ -R /lib -R /lib64/ -R /usr/ -R /sbin/ -R $1/:$container/ --seccomp_string "${10}" -t $7 --rlimit_fsize $9 --rlimit_as $8 -x $container/main < $4 > $1/result 2>$6
+    ${11}/nsjail -Mo --user 99999 --group 99999 -v -R /bin/ -R /lib -R /lib64/ -R /usr/ -R /sbin/ -R $1/:$container/ --seccomp_string "${10}" -t $7 --rlimit_fsize $9 --rlimit_as $8 -x $container/main < $4 > $1/result 2>$6
 elif [ $2 == 2 ]; then
-    ${10}/nsjail -Mo --user 99999 --group 99999 -v -R /bin/ -R /lib -R /lib64/ -R /usr/ -R /sbin/ -R $1/:$container/ --seccomp_string "${10}" -t $7 --rlimit_fsize $9 --rlimit_as $8 -x /bin/python3 python3 $container/main.py < $4 > $1/result 2>$6
+    ${11}/nsjail -Mo --user 99999 --group 99999 -v -R /bin/ -R /lib -R /lib64/ -R /usr/ -R /sbin/ -R $1/:$container/ --seccomp_string "${10}" -t $7 --rlimit_fsize $9 --rlimit_as $8 -x /bin/python3 python3 $container/main.py < $4 > $1/result 2>$6
 fi
 
 # SECCOMP ERROR
